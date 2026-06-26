@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Recovery Log</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a18;min-height:100vh;}
+  .app{max-width:700px;margin:0 auto;padding:1.5rem 1rem 4rem;}
+  h1{font-size:22px;font-weight:600;margin-bottom:4px;}
+  .subtitle{font-size:14px;color:#666;margin-bottom:1.5rem;}
+  .tabs{display:flex;gap:6px;margin-bottom:1.5rem;flex-wrap:wrap;}
+  .tab{padding:7px 14px;border-radius:8px;border:1px solid #ddd;background:transparent;cursor:pointer;font-size:13px;color:#666;}
+  .tab.active{background:#e8f0fe;color:#1a56db;border-color:#93b4f8;font-weight:600;}
+  .card{background:#fff;border:1px solid #e5e5e0;border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+  .section-title{font-size:17px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  label{font-size:13px;color:#555;margin-bottom:5px;display:block;}
+  input,select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px;background:#fff;color:#1a1a18;font-family:inherit;}
+  input:focus,select:focus{outline:none;border-color:#93b4f8;box-shadow:0 0 0 2px rgba(147,180,248,0.3);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .mb{margin-bottom:12px;}
+  .flex-end{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+  .btn{padding:9px 18px;border-radius:8px;border:none;font-size:14px;font-weight:600;cursor:pointer;}
+  .btn-primary{background:#1a56db;color:#fff;}
+  .btn-primary:hover{background:#1447c0;}
+  .btn-skip{background:#fff;color:#92400e;border:2px solid #f59e0b;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  .btn-log{background:#1a56db;color:#fff;border:none;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  .btn-sm{background:transparent;color:#888;border:1px solid #ddd;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;}
+  .btn-danger{background:transparent;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;}
+  .btn-save{background:#1a56db;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;}
+  .btn-export{background:#fff;color:#333;border:1px solid #ddd;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;}
+  .btn-import{background:#fff;color:#1a56db;border:1px solid #93b4f8;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;}
+  .btn-clear{background:transparent;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;}
+  .entry{border:1px solid #e5e5e0;border-radius:8px;padding:10px 14px;margin-bottom:8px;background:#fafaf8;}
+  .entry.editing{border-color:#93b4f8;background:#f0f5ff;}
+  .entry-header{display:flex;justify-content:space-between;align-items:flex-start;}
+  .entry-info{flex:1;min-width:0;}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;margin-bottom:3px;}
+  .badge-med{background:#e8f0fe;color:#1a56db;}
+  .badge-urine{background:#d1fae5;color:#065f46;}
+  .badge-activity{background:#fef3c7;color:#92400e;}
+  .badge-skipped{background:#fee2e2;color:#991b1b;}
+  .entry-title{font-size:14px;font-weight:600;color:#1a1a18;margin:2px 0 2px;}
+  .entry-detail{font-size:13px;color:#666;}
+  .entry-actions{display:flex;gap:6px;flex-shrink:0;margin-left:8px;}
+  .date-divider{font-size:11px;font-weight:700;color:#999;margin:14px 0 6px;text-transform:uppercase;letter-spacing:0.06em;border-top:1px solid #eee;padding-top:10px;}
+  .empty{color:#999;font-size:14px;text-align:center;padding:28px 0;}
+  .color-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;}
+  .color-btn{border:2.5px solid transparent;border-radius:8px;padding:10px 4px;font-size:12px;cursor:pointer;text-align:center;font-weight:600;transition:transform 0.1s,box-shadow 0.1s;}
+  .color-btn.selected{border-color:#222;font-size:13px;font-weight:800;transform:scale(1.08);box-shadow:0 2px 8px rgba(0,0,0,0.18);}
+  .color-label{font-size:13px;font-weight:600;margin-top:8px;min-height:18px;color:#333;}
+  .slot-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+  .slot-btn{border:2px solid #ccc;border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer;background:#f5f5f0;color:#555;font-weight:500;display:flex;align-items:center;gap:5px;}
+  .slot-btn.selected{border:3px solid #222;background:#e8f0fe;color:#1a56db;font-weight:700;font-size:14px;transform:scale(1.06);box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+  .slot-label{font-size:13px;font-weight:600;margin-top:8px;min-height:18px;color:#333;}
+  .freq-hint{font-size:12px;color:#1a56db;margin-top:5px;min-height:16px;font-weight:500;}
+  .med-card{border:1px solid #e5e5e0;border-radius:8px;padding:12px 14px;margin-bottom:8px;background:#fafaf8;}
+  .med-card.as-needed-card{border-left:4px solid #a855f7;background:#fdf8ff;}
+  .med-card.scheduled-card{border-left:4px solid #1a56db;background:#f8faff;}
+  .med-card.editing{border-color:#93b4f8;background:#f0f5ff;}
+  .med-name{font-size:14px;font-weight:600;}
+  .med-detail{font-size:12px;color:#666;margin-top:2px;}
+  .med-section-label{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid #eee;}
+  .reminder-card{border:1px solid #93b4f8;border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px;background:#f0f5ff;}
+  .reminder-card.overdue-card{border-color:#fca5a5;background:#fff5f5;}
+  .reminder-card.asn-card{border-left:4px solid #a855f7;background:#fdf8ff;border-color:#d8b4fe;}
+  .reminder-name{font-size:15px;font-weight:600;}
+  .reminder-meta{font-size:12px;color:#555;margin-top:2px;}
+  .countdown{font-size:22px;font-weight:700;color:#1a56db;margin:8px 0 4px;font-variant-numeric:tabular-nums;}
+  .countdown.overdue{color:#dc2626;}
+  .countdown.done{color:#999;font-size:14px;}
+  .progress-wrap{height:5px;background:#dde;border-radius:3px;margin-top:8px;overflow:hidden;}
+  .progress-bar{height:5px;background:#1a56db;border-radius:3px;}
+  .overdue-box{margin-top:10px;border-top:1px solid #fca5a5;padding-top:10px;}
+  .overdue-title{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:8px;}
+  .action-row{display:flex;gap:10px;align-items:center;}
+  .edit-form{margin-top:10px;border-top:1px solid #c7d9fd;padding-top:10px;}
+  .edit-input{width:100%;box-sizing:border-box;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid #ccc;background:#fff;color:#1a1a18;font-family:inherit;}
+  .edit-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  .edit-label{font-size:11px;color:#666;margin-bottom:4px;display:block;}
+  .add-toggle{font-size:13px;color:#1a56db;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600;margin-bottom:12px;}
+  .notif-bar{background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#92400e;display:none;}
+  .sync-bar{background:#e8f0fe;border:1px solid #93b4f8;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:13px;color:#1a56db;display:none;}
+  .save-indicator{position:fixed;bottom:20px;right:20px;background:#1a56db;color:#fff;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity 0.4s;pointer-events:none;}
+  .end-preview{font-size:12px;color:#666;margin-top:6px;min-height:16px;}
+  .toolbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .rem-section-label{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.06em;margin:12px 0 8px;padding-bottom:4px;border-bottom:1px solid #eee;}
+  .loading{text-align:center;color:#999;padding:40px 0;font-size:14px;}
+  .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+  .stat-box{background:#f8faff;border:1px solid #c7d9fd;border-radius:10px;padding:12px 14px;text-align:center;}
+  .stat-value{font-size:26px;font-weight:700;color:#1a56db;line-height:1.1;}
+  .stat-label{font-size:11px;color:#666;margin-top:4px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
+  .stat-sub{font-size:12px;color:#999;margin-top:2px;}
+  .color-bar-wrap{margin-bottom:14px;}
+  .color-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .color-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;border:1px solid rgba(0,0,0,0.1);}
+  .color-bar-bg{flex:1;background:#eee;border-radius:4px;height:16px;overflow:hidden;}
+  .color-bar-fill{height:16px;border-radius:4px;transition:width 0.4s;}
+  .color-bar-label{font-size:12px;color:#555;min-width:80px;}
+  .color-bar-pct{font-size:12px;color:#999;min-width:36px;text-align:right;}
+  .day-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px;}
+  .day-table th{text-align:left;padding:6px 8px;font-size:11px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #eee;}
+  .day-table td{padding:7px 8px;border-bottom:1px solid #f0f0f0;color:#333;}
+  .day-table tr:last-child td{border-bottom:none;}
+  .day-table tr:hover td{background:#f8faff;}
+  .report-section{font-size:13px;font-weight:700;color:#555;margin:16px 0 8px;text-transform:uppercase;letter-spacing:0.05em;}
+  .alert-box{border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:10px;}
+  .alert-warn{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;}
+  .alert-good{background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;}
+  .alert-info{background:#e8f0fe;border:1px solid #93b4f8;color:#1a56db;}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Recovery log</h1>
+  <div class="subtitle" id="date-display"></div>
+  <div class="sync-bar" id="sync-bar"><i class="ti ti-refresh" style="margin-right:6px;"></i><span id="sync-msg">Syncing...</span></div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('log')" id="tab-log">Log entry</button>
+    <button class="tab" onclick="switchTab('medications')" id="tab-medications">Medications (<span id="med-count">0</span>)</button>
+    <button class="tab" onclick="switchTab('reminders')" id="tab-reminders">Reminders (<span id="rem-count">0</span>)</button>
+    <button class="tab" onclick="switchTab('history')" id="tab-history">History (<span id="hist-count">0</span>)</button>
+    <button class="tab" onclick="switchTab('reports')" id="tab-reports">Reports</button>
+  </div>
+
+  <div id="panel-log">
+    <div class="card">
+      <div class="section-title"><i class="ti ti-pill"></i> Medication</div>
+      <div class="row2"><div><label>Date</label><input type="date" id="med-date"/></div><div><label>Time taken</label><input type="time" id="med-time"/></div></div>
+      <div class="mb"><label>Select medication</label><select id="med-select" onchange="fillFromLib()"><option value="">— choose or enter manually below —</option></select></div>
+      <div class="row2"><div><label>Medication name</label><input type="text" id="med-name" placeholder="e.g. Tylenol"/></div><div><label>Dose</label><input type="text" id="med-dose" placeholder="e.g. 500mg"/></div></div>
+      <div class="row2"><div><label>Count</label><input type="text" id="med-count-in" placeholder="e.g. 2 pills"/></div><div><label>Notes</label><input type="text" id="med-notes" placeholder="e.g. with food"/></div></div>
+      <div style="margin-bottom:12px;"><label>Logged by (initials)</label><input type="text" id="med-who" placeholder="e.g. JD" maxlength="3" style="width:80px;text-transform:uppercase;"/></div>
+      <div class="flex-end"><button class="btn btn-primary" onclick="logMed()"><i class="ti ti-plus"></i> Log medication</button></div>
+    </div>
+    <div class="card">
+      <div class="section-title"><i class="ti ti-droplet"></i> Urine output</div>
+      <div class="row2"><div><label>Date</label><input type="date" id="urine-date"/></div><div><label>Time</label><input type="time" id="urine-time"/></div></div>
+      <div class="row2"><div><label>Amount (mL)</label><input type="number" id="urine-amount" placeholder="e.g. 250" min="0"/></div><div><label>Notes</label><input type="text" id="urine-notes" placeholder="e.g. odor, urgency"/></div></div>
+      <div class="mb">
+        <label>Color</label>
+        <div class="color-grid">
+          <button class="color-btn" style="background:#f0f8ff;color:#1a4a6b;" onclick="selColorFn(this,'Clear')">Clear</button>
+          <button class="color-btn" style="background:#fff9c4;color:#7a6500;" onclick="selColorFn(this,'Pale yellow')">Pale yellow</button>
+          <button class="color-btn" style="background:#fdd835;color:#5a4100;" onclick="selColorFn(this,'Yellow')">Yellow</button>
+          <button class="color-btn" style="background:#f9a825;color:#4a2d00;" onclick="selColorFn(this,'Dark yellow')">Dark yellow</button>
+          <button class="color-btn" style="background:#e65100;color:#fff;" onclick="selColorFn(this,'Orange')">Orange</button>
+          <button class="color-btn" style="background:#b71c1c;color:#fff;" onclick="selColorFn(this,'Pink/red')">Pink/red</button>
+        </div>
+        <div class="color-label" id="color-label">No color selected</div>
+      </div>
+      <div style="margin-bottom:12px;"><label>Logged by (initials)</label><input type="text" id="urine-who" placeholder="e.g. JD" maxlength="3" style="width:80px;text-transform:uppercase;"/></div>
+      <div class="flex-end"><button class="btn btn-primary" onclick="logUrine()"><i class="ti ti-plus"></i> Log urine output</button></div>
+    </div>
+    <div class="card">
+      <div class="section-title"><i class="ti ti-activity"></i> Activity / other</div>
+      <div class="row2"><div><label>Date</label><input type="date" id="act-date"/></div><div><label>Time</label><input type="time" id="act-time"/></div></div>
+      <div class="row2"><div><label>Activity</label><input type="text" id="act-name" placeholder="e.g. Bath, Nasal Irrigation" list="act-suggestions"/><datalist id="act-suggestions"></datalist></div><div><label>Notes</label><input type="text" id="act-notes" placeholder="e.g. tolerated well"/></div></div>
+      <div style="margin-bottom:12px;"><label>Logged by (initials)</label><input type="text" id="act-who" placeholder="e.g. JD" maxlength="3" style="width:80px;text-transform:uppercase;"/></div>
+      <div class="flex-end"><button class="btn btn-primary" onclick="logActivity()"><i class="ti ti-plus"></i> Log activity</button></div>
+    </div>
+  </div>
+
+  <div id="panel-medications" style="display:none;">
+    <div id="med-lib-list"></div>
+    <div class="card" style="margin-top:8px;">
+      <div class="add-toggle" onclick="toggleAddForm()"><i class="ti ti-plus" id="add-icon"></i><span id="add-label">Add new medication</span></div>
+      <div id="add-form" style="display:none;">
+        <div class="row2"><div><label>Medication name</label><input type="text" id="lib-name" placeholder="e.g. Tylenol"/></div><div><label>Dose</label><input type="text" id="lib-dose" placeholder="e.g. 500mg"/></div></div>
+        <div class="row2"><div><label>Count</label><input type="text" id="lib-count" placeholder="e.g. 2 pills"/></div><div><label>Notes</label><input type="text" id="lib-notes" placeholder="e.g. with food"/></div></div>
+        <div class="mb">
+          <label>When to take <span style="font-weight:400;color:#999;">(select all that apply)</span></label>
+          <div class="slot-grid" id="lib-slots">
+            <button class="slot-btn" onclick="toggleSlot(this,'Morning')"><i class="ti ti-sun"></i>Morning</button>
+            <button class="slot-btn" onclick="toggleSlot(this,'Around noon')"><i class="ti ti-clock"></i>Around noon</button>
+            <button class="slot-btn" onclick="toggleSlot(this,'Evening')"><i class="ti ti-moon"></i>Evening</button>
+            <button class="slot-btn" onclick="toggleSlot(this,'Bedtime')"><i class="ti ti-zzz"></i>Bedtime</button>
+            <button class="slot-btn" onclick="toggleSlot(this,'As needed')"><i class="ti ti-alert-circle"></i>As needed</button>
+          </div>
+          <div class="slot-label" id="slot-label">No time selected</div>
+          <div class="freq-hint" id="freq-hint"></div>
+        </div>
+        <div style="border-top:1px solid #eee;margin:12px 0;padding-top:12px;">
+          <div style="font-size:13px;font-weight:600;color:#666;margin-bottom:10px;"><i class="ti ti-bell"></i> Reminder schedule</div>
+          <div class="row2">
+            <div><label>Frequency</label><select id="lib-freq"><option value="">No reminder</option><option value="4">Every 4 hours</option><option value="6">Every 6 hours</option><option value="8">Every 8 hours</option><option value="12">Every 12 hours</option><option value="24">Once daily</option></select></div>
+            <div><label>How many days?</label><input type="number" id="lib-days" placeholder="e.g. 7" min="1"/></div>
+          </div>
+          <div class="row2"><div><label>First dose date</label><input type="date" id="lib-nd"/></div><div><label>First dose time</label><input type="time" id="lib-nt"/></div></div>
+          <div class="end-preview" id="end-preview"></div>
+        </div>
+        <div class="flex-end"><button class="btn btn-primary" onclick="addMed()"><i class="ti ti-plus"></i> Add medication</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-reminders" style="display:none;">
+    <div class="notif-bar" id="notif-bar"><i class="ti ti-bell"></i> Enable browser notifications. <button onclick="askNotif()" style="margin-left:10px;padding:3px 10px;border-radius:6px;border:1px solid #f59e0b;background:transparent;color:#92400e;cursor:pointer;font-size:12px;">Enable</button></div>
+    <div id="rem-list"></div>
+  </div>
+
+  <div id="panel-history" style="display:none;">
+    <div class="toolbar">
+      <select id="hist-filter" onchange="renderHistory()" style="width:auto;"><option value="all">All entries</option><option value="med">Medications</option><option value="urine">Urine</option><option value="activity">Activities</option><option value="skipped">Skipped</option></select>
+      <button class="btn-export" onclick="exportLog()"><i class="ti ti-download"></i> Export</button>
+      <button class="btn-import" onclick="document.getElementById('import-input').click()"><i class="ti ti-upload"></i> Import</button>
+      <input type="file" id="import-input" accept=".txt" style="display:none;" onchange="importLog(event)"/>
+      <button class="btn-clear" onclick="clearAll()"><i class="ti ti-trash"></i> Clear all</button>
+    </div>
+    <div id="hist-list"></div>
+  </div>
+</div>
+
+  <!-- REPORTS -->
+  <div id="panel-reports" style="display:none;">
+    <div class="card" style="margin-bottom:10px;">
+      <div class="section-title"><i class="ti ti-chart-bar"></i> Urine Report</div>
+      <div class="row2" style="margin-bottom:10px;">
+        <div>
+          <label>Date range</label>
+          <select id="report-range" onchange="renderReports()">
+            <option value="all">All time</option>
+            <option value="1">Today</option>
+            <option value="2">Last 2 days</option>
+            <option value="3">Last 3 days</option>
+            <option value="7">Last 7 days</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div id="report-custom-wrap" style="display:none;">
+          <label>From</label>
+          <input type="date" id="report-from" onchange="renderReports()"/>
+        </div>
+      </div>
+      <div id="report-custom-to-wrap" style="display:none;margin-bottom:10px;">
+        <label>To</label>
+        <input type="date" id="report-to" onchange="renderReports()"/>
+      </div>
+    </div>
+    <div id="report-content"></div>
+  </div>
+
+<div class="save-indicator" id="save-indicator">Saved</div>
+
+<script>
+// ── Supabase config ──
+var SB_URL='https://bxjthjwpkaueobpastak.supabase.co';
+var SB_KEY='sb_publishable_tDgpCcbd8wEP24lu1IvTCQ_h4GgkTrM';
+
+function sbHeaders(){return{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'};}
+function sbGet(table,params){
+  var url=SB_URL+'/rest/v1/'+table+'?'+(params||'order=ts.asc');
+  return fetch(url,{headers:sbHeaders()}).then(function(r){return r.json();});
+}
+function sbUpsert(table,data){
+  return fetch(SB_URL+'/rest/v1/'+table,{method:'POST',headers:Object.assign({},sbHeaders(),{'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(data)});
+}
+function sbDelete(table,filter){
+  return fetch(SB_URL+'/rest/v1/'+table+'?'+filter,{method:'DELETE',headers:sbHeaders()});
+}
+
+var SEED_E=[
+  {type:'urine',date:'6/24/2026',time:'4:45 PM',amount:250,color:'Yellow',notes:'',ts:1},
+  {type:'med',date:'6/24/2026',time:'6:20 PM',name:'Hidrocortizone',dose:'5mg',count:'5 Pills',notes:'25mg Total',ts:2},
+  {type:'activity',date:'6/24/2026',time:'6:20 PM',name:'Nasal Irrigation',notes:'',ts:3},
+  {type:'urine',date:'6/24/2026',time:'6:20 PM',amount:250,color:'',notes:'',ts:4},
+  {type:'activity',date:'6/24/2026',time:'6:20 PM',name:'Bath',notes:'',ts:5},
+  {type:'urine',date:'6/24/2026',time:'8:00 PM',amount:250,color:'Pale yellow',notes:'',ts:6},
+  {type:'med',date:'6/24/2026',time:'8:40 PM',name:'Amoxicillin-clavulanate',dose:'875-125mg',count:'1 Pill',notes:'',ts:7},
+  {type:'med',date:'6/24/2026',time:'10:15 PM',name:'Zoloft',dose:'',count:'1 Pill',notes:'',ts:8},
+  {type:'med',date:'6/24/2026',time:'10:15 PM',name:'Tylenol',dose:'500mg',count:'2 Pills',notes:'',ts:9},
+  {type:'urine',date:'6/24/2026',time:'10:30 PM',amount:300,color:'Pale yellow',notes:'',ts:10},
+  {type:'med',date:'6/24/2026',time:'11:37 PM',name:'Allegra',dose:'',count:'1 Pill',notes:'',ts:11},
+  {type:'urine',date:'6/25/2026',time:'12:18 AM',amount:300,color:'Pale yellow',notes:'',ts:12},
+  {type:'urine',date:'6/25/2026',time:'3:13 AM',amount:100,color:'Yellow',notes:'',ts:13},
+  {type:'urine',date:'6/25/2026',time:'5:00 AM',amount:300,color:'Pale yellow',notes:'',ts:14},
+  {type:'med',date:'6/25/2026',time:'7:00 AM',name:'Tylenol',dose:'500mg',count:'2 Pills',notes:'',ts:15},
+  {type:'urine',date:'6/25/2026',time:'7:00 AM',amount:300,color:'Pale yellow',notes:'',ts:16},
+  {type:'urine',date:'6/25/2026',time:'8:30 AM',amount:100,color:'Yellow',notes:'',ts:17},
+  {type:'med',date:'6/25/2026',time:'9:30 AM',name:'Hidrocortizone',dose:'5mg',count:'3 Pills',notes:'15mg total',ts:18},
+  {type:'med',date:'6/25/2026',time:'9:30 AM',name:'Amoxicillin-clavulanate',dose:'875-125mg',count:'1 Pill',notes:'',ts:19},
+  {type:'med',date:'6/25/2026',time:'9:30 AM',name:'Allegra',dose:'',count:'1 Pill',notes:'',ts:20},
+  {type:'urine',date:'6/25/2026',time:'10:10 AM',amount:500,color:'Pale yellow',notes:'',ts:21},
+  {type:'med',date:'6/25/2026',time:'10:18 AM',name:'Losartan',dose:'',count:'1 Pill',notes:'',ts:22},
+  {type:'urine',date:'6/25/2026',time:'11:00 AM',amount:500,color:'Yellow',notes:'',ts:23},
+  {type:'urine',date:'6/25/2026',time:'11:55 AM',amount:600,color:'Pale yellow',notes:'',ts:24},
+  {type:'med',date:'6/25/2026',time:'1:45 PM',name:'Miralax',dose:'',count:'1 packet',notes:'',ts:25},
+  {type:'urine',date:'6/25/2026',time:'2:00 PM',amount:300,color:'Yellow',notes:'',ts:26},
+  {type:'med',date:'6/25/2026',time:'3:10 AM',name:'Tylenol',dose:'500mg',count:'2 Pills',notes:'',ts:27},
+  {type:'urine',date:'6/25/2026',time:'3:37 AM',amount:550,color:'Pale yellow',notes:'',ts:28},
+  {type:'urine',date:'6/26/2026',time:'4:21 AM',amount:400,color:'Pale yellow',notes:'',ts:29},
+  {type:'activity',date:'6/26/2026',time:'4:21 AM',name:'Nasal Irrigation',notes:'',ts:30},
+  {type:'activity',date:'6/26/2026',time:'4:21 AM',name:'Bath',notes:'',ts:31},
+  {type:'urine',date:'6/26/2026',time:'6:15 AM',amount:350,color:'Yellow',notes:'',ts:32}
+];
+
+var SEED_M=[
+  {id:101,name:'Hidrocortizone',dose:'5mg',count:'',notes:'',slots:['Morning'],freq:24,days:14,nextDate:'6/26/2026',nextTime:'9:30 AM',endDate:'7/9/2026'},
+  {id:102,name:'Amoxicillin-clavulanate',dose:'875-125mg',count:'1 Pill',notes:'',slots:['Morning','Evening'],freq:12,days:10,nextDate:'6/26/2026',nextTime:'9:30 PM',endDate:'7/5/2026'},
+  {id:103,name:'Zoloft',dose:'',count:'1 Pill',notes:'',slots:['Morning'],freq:24,days:30,nextDate:'6/26/2026',nextTime:'9:30 AM',endDate:'7/25/2026'},
+  {id:104,name:'Tylenol',dose:'500mg',count:'2 Pills',notes:'',slots:['Morning','Evening'],freq:12,days:7,nextDate:'6/26/2026',nextTime:'9:30 PM',endDate:'7/2/2026'},
+  {id:105,name:'Allegra',dose:'',count:'1 Pill',notes:'',slots:['Morning'],freq:24,days:30,nextDate:'6/26/2026',nextTime:'9:30 AM',endDate:'7/25/2026'},
+  {id:106,name:'Losartan',dose:'',count:'1 Pill',notes:'As needed',slots:['As needed'],freq:null,days:null,nextDate:'',nextTime:'',endDate:''},
+  {id:107,name:'Miralax',dose:'',count:'1 packet',notes:'As needed',slots:['As needed'],freq:null,days:null,nextDate:'',nextTime:'',endDate:''}
+];
+
+var SEED_R=[
+  {id:101,active:true,name:'Hidrocortizone',dose:'5mg',count:'',freq:24,nextDate:'6/26/2026',nextTime:'9:30 AM',endDate:'7/9/2026'},
+  {id:102,active:true,name:'Amoxicillin-clavulanate',dose:'875-125mg',count:'1 Pill',freq:12,nextDate:'6/26/2026',nextTime:'9:30 PM',endDate:'7/5/2026'},
+  {id:103,active:true,name:'Zoloft',dose:'',count:'1 Pill',freq:24,nextDate:'6/26/2026',nextTime:'9:30 AM',endDate:'7/25/2026'},
+  {id:104,active:true,name:'Tylenol',dose:'500mg',count:'2 Pills',freq:12,nextDate:'6/26/2026',nextTime:'9:30 PM',endDate:'7/2/2026'},
+  {id:105,active:true,name:'Allegra',dose:'',count:'1 Pill',freq:24,nextDate:'6/26/2026',nextTime:'9:30 AM',endDate:'7/25/2026'}
+];
+
+var COLORS=[{l:'Clear',bg:'#f0f8ff',c:'#1a4a6b'},{l:'Pale yellow',bg:'#fff9c4',c:'#7a6500'},{l:'Yellow',bg:'#fdd835',c:'#5a4100'},{l:'Dark yellow',bg:'#f9a825',c:'#4a2d00'},{l:'Orange',bg:'#e65100',c:'#fff'},{l:'Pink/red',bg:'#b71c1c',c:'#fff'}];
+var ALL_SLOTS=['Morning','Around noon','Evening','Bedtime','As needed'];
+var SLOT_ICONS={'Morning':'ti-sun','Around noon':'ti-clock','Evening':'ti-moon','Bedtime':'ti-zzz','As needed':'ti-alert-circle'};
+var FREQ_MAP={1:24,2:12,3:8,4:6,5:4};
+
+var entries=[],meds=[],reminders=[];
+var selClr='',editTs=null,editMedId=null,editRemId=null,editClr='';
+var selSlots=[],addOpen=false,ticker=null;
+
+function isAsNeeded(m){return m.slots&&m.slots.length===1&&m.slots[0]==='As needed'&&!m.freq;}
+function showSync(msg){var b=document.getElementById('sync-bar');var s=document.getElementById('sync-msg');b.style.display='block';s.textContent=msg;}
+function hideSync(){document.getElementById('sync-bar').style.display='none';}
+function flash(){var el=document.getElementById('save-indicator');el.style.opacity='1';setTimeout(function(){el.style.opacity='0';},1500);}
+function updateCounts(){document.getElementById('hist-count').textContent=entries.length;document.getElementById('med-count').textContent=meds.length;document.getElementById('rem-count').textContent=reminders.filter(function(r){return r.active;}).length;}
+
+// ── DB helpers ──
+function entryToRow(e){return{ts:e.ts,type:e.type,date:e.date,time:e.time,name:e.name||null,dose:e.dose||null,count:e.count||null,notes:e.notes||null,amount:e.amount||null,color:e.color||null};}
+function rowToEntry(r){return{ts:r.ts,type:r.type,date:r.date,time:r.time,name:r.name||'',dose:r.dose||'',count:r.count||'',notes:r.notes||'',amount:r.amount||null,color:r.color||''};}
+function medToRow(m){return{id:m.id,name:m.name,dose:m.dose||null,count:m.count||null,notes:m.notes||null,slots:JSON.stringify(m.slots||[]),freq:m.freq||null,days:m.days||null,next_date:m.nextDate||null,next_time:m.nextTime||null,end_date:m.endDate||null};}
+function rowToMed(r){return{id:r.id,name:r.name,dose:r.dose||'',count:r.count||'',notes:r.notes||'',slots:typeof r.slots==='string'?JSON.parse(r.slots):r.slots||[],freq:r.freq||null,days:r.days||null,nextDate:r.next_date||'',nextTime:r.next_time||'',endDate:r.end_date||''};}
+function remToRow(r){return{id:r.id,active:r.active,name:r.name,dose:r.dose||null,count:r.count||null,freq:r.freq||null,next_date:r.nextDate||null,next_time:r.nextTime||null,end_date:r.endDate||null};}
+function rowToRem(r){return{id:r.id,active:r.active,name:r.name,dose:r.dose||'',count:r.count||'',freq:r.freq||null,nextDate:r.next_date||'',nextTime:r.next_time||'',endDate:r.end_date||''};}
+
+async function load(){
+  // Clear any old localStorage data that may cause duplicates
+  try{localStorage.clear();}catch(e){}
+
+  showSync('Loading shared data...');
+  try{
+    var dbE=await sbGet('rl_entries','order=ts.asc');
+    var dbM=await sbGet('rl_meds','order=id.asc');
+    var dbR=await sbGet('rl_reminders','order=id.asc');
+    var dbDel=await sbGet('rl_deleted','order=ts.asc');
+    var deletedTs=new Set((dbDel||[]).map(function(r){return r.ts;}));
+
+    if(dbE&&dbE.length>0){
+      // Only use what's in Supabase — no merging with seed
+      entries=dbE.map(rowToEntry);
+    } else {
+      // DB is empty — seed it once
+      var toInsert=SEED_E.filter(function(e){return !deletedTs.has(e.ts);});
+      if(toInsert.length>0)await sbUpsert('rl_entries',toInsert.map(entryToRow));
+      entries=toInsert;
+    }
+
+    if(dbM&&dbM.length>0){meds=dbM.map(rowToMed);}
+    else{await sbUpsert('rl_meds',SEED_M.map(medToRow));meds=SEED_M.slice();}
+
+    if(dbR&&dbR.length>0){reminders=dbR.map(rowToRem);}
+    else{await sbUpsert('rl_reminders',SEED_R.map(remToRow));reminders=SEED_R.slice();}
+
+    hideSync();
+  } catch(e){
+    hideSync();
+    showSync('Offline — changes will not sync. Check connection.');
+    setTimeout(hideSync,4000);
+    // Offline fallback — no seeding, just empty
+    entries=[];meds=SEED_M.slice();reminders=SEED_R.slice();
+  }
+  updateCounts();populateDropdown();updateActivitySuggestions();checkNotifPerm();startTicker();
+}
+
+async function saveEntry(e){await sbUpsert('rl_entries',[entryToRow(e)]);flash();}
+async function saveAllEntries(){await sbUpsert('rl_entries',entries.map(entryToRow));flash();}
+async function saveMed(m){await sbUpsert('rl_meds',[medToRow(m)]);flash();}
+async function saveAllMeds(){await sbUpsert('rl_meds',meds.map(medToRow));flash();}
+async function saveRem(r){await sbUpsert('rl_reminders',[remToRow(r)]);flash();}
+async function saveAllRems(){await sbUpsert('rl_reminders',reminders.map(remToRow));flash();}
+async function deleteEntry(ts){
+  if(!confirm('Delete this entry?'))return;
+  entries=entries.filter(function(e){return e.ts!==ts;});
+  await sbDelete('rl_entries','ts=eq.'+ts);
+  await sbUpsert('rl_deleted',[{ts:ts}]);
+  editTs=null;updateCounts();renderHistory();
+}
+async function delMed(id){
+  if(!confirm('Remove this medication?'))return;
+  meds=meds.filter(function(m){return m.id!==id;});
+  reminders=reminders.filter(function(r){return r.id!==id;});
+  await sbDelete('rl_meds','id=eq.'+id);
+  await sbDelete('rl_reminders','id=eq.'+id);
+  updateCounts();populateDropdown();renderMeds();
+  var rp=document.getElementById('panel-reminders');if(rp&&rp.style.display!=='none')renderReminders();
+  toast('Medication removed');
+}
+async function delReminder(id){
+  if(!confirm('Remove this reminder?'))return;
+  reminders=reminders.filter(function(r){return r.id!==id;});
+  var m=meds.find(function(m){return m.id===id;});
+  if(m){m.freq=null;m.nextDate='';m.nextTime='';m.endDate='';await saveMed(m);}
+  await sbDelete('rl_reminders','id=eq.'+id);
+  updateCounts();renderReminders();
+  var mp=document.getElementById('panel-medications');if(mp&&mp.style.display!=='none')renderMeds();
+  toast('Reminder removed');
+}
+async function clearAll(){
+  if(!confirm('Clear ALL history entries? Cannot be undone.'))return;
+  await sbDelete('rl_entries','ts=gt.0');
+  entries=[];editTs=null;updateCounts();renderHistory();toast('All history cleared');
+}
+
+document.getElementById('date-display').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+function setDefaults(){var now=new Date(),d=now.toISOString().split('T')[0],hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0');['med','urine','act'].forEach(function(p){document.getElementById(p+'-date').value=d;document.getElementById(p+'-time').value=hh+':'+mm;});document.getElementById('lib-nd').value=d;document.getElementById('lib-nt').value=hh+':'+mm;}
+setDefaults();
+document.getElementById('lib-days').addEventListener('input',updateEndPreview);
+document.getElementById('lib-nd').addEventListener('input',updateEndPreview);
+function updateEndPreview(){var days=parseInt(document.getElementById('lib-days').value);var sd=document.getElementById('lib-nd').value;var prev=document.getElementById('end-preview');if(days>0&&sd){var e=new Date(sd+'T00:00:00');e.setDate(e.getDate()+days-1);prev.textContent='Treatment ends: '+e.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});}else prev.textContent='';}
+
+function switchTab(tab){editTs=null;editMedId=null;editRemId=null;['log','medications','reminders','history','reports'].forEach(function(t){document.getElementById('panel-'+t).style.display=t===tab?'block':'none';document.getElementById('tab-'+t).className='tab'+(t===tab?' active':'');});if(tab==='history')renderHistory();if(tab==='reminders')renderReminders();if(tab==='medications')renderMeds();if(tab==='reports')renderReports();}
+
+function selColorFn(btn,c){document.querySelectorAll('.color-btn').forEach(function(b){b.classList.remove('selected');});btn.classList.add('selected');selClr=c;document.getElementById('color-label').textContent='Selected: '+c;}
+function toggleSlot(btn,s){btn.classList.toggle('selected');if(selSlots.indexOf(s)>=0)selSlots=selSlots.filter(function(x){return x!==s;});else selSlots.push(s);updateSlotLabel();autoFreq();}
+function updateSlotLabel(){var l=document.getElementById('slot-label');if(l)l.textContent=selSlots.length?'Selected: '+selSlots.join(', '):'No time selected';}
+function autoFreq(){var f=document.getElementById('lib-freq');var h=document.getElementById('freq-hint');var timed=selSlots.filter(function(s){return s!=='As needed';});if(selSlots.length===1&&selSlots[0]==='As needed'){f.value='';if(h)h.textContent='As needed — no automatic reminder.';return;}var n=timed.length;if(!n){f.value='';if(h)h.textContent='';return;}var v=FREQ_MAP[Math.min(n,5)]||24;f.value=String(v);if(h)h.textContent='Auto-set to '+(v===24?'once daily':'every '+v+' hours')+' based on '+n+' slot'+(n>1?'s':'');}
+function resetSlots(){selSlots=[];document.querySelectorAll('#lib-slots .slot-btn').forEach(function(b){b.classList.remove('selected');});updateSlotLabel();var h=document.getElementById('freq-hint');if(h)h.textContent='';document.getElementById('end-preview').textContent='';}
+function toggleAddForm(){addOpen=!addOpen;document.getElementById('add-form').style.display=addOpen?'block':'none';document.getElementById('add-icon').className=addOpen?'ti ti-minus':'ti ti-plus';document.getElementById('add-label').textContent=addOpen?'Hide form':'Add new medication';}
+
+function fmt(t){if(!t)return '';var p=t.split(':');var h=parseInt(p[0]);return(h%12||12)+':'+p[1]+' '+(h>=12?'PM':'AM');}
+function dispDate(di){if(!di)return new Date().toLocaleDateString();return new Date(di+'T00:00:00').toLocaleDateString();}
+function toId(d){if(!d)return '';var p=d.split('/');return p.length===3?p[2]+'-'+p[0].padStart(2,'0')+'-'+p[1].padStart(2,'0'):'';}
+function toIt(t){if(!t)return '';var m=t.match(/(\d+):(\d+)\s*(AM|PM)/i);if(!m)return '';var h=parseInt(m[1]);var ap=m[3].toUpperCase();if(ap==='PM'&&h!==12)h+=12;if(ap==='AM'&&h===12)h=0;return String(h).padStart(2,'0')+':'+m[2];}
+function calcEnd(sd,days){if(!sd||!days)return '';var d=new Date(sd+'T00:00:00');d.setDate(d.getDate()+parseInt(days)-1);return d.toLocaleDateString();}
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function populateDropdown(){var sel=document.getElementById('med-select');var prev=sel.value;sel.innerHTML='<option value="">— choose or enter manually below —</option>';var sc=meds.filter(function(m){return !isAsNeeded(m);});var an=meds.filter(function(m){return isAsNeeded(m);});if(sc.length){var og=document.createElement('optgroup');og.label='Scheduled';sc.forEach(function(m){var o=document.createElement('option');o.value=m.id;o.textContent=m.name+(m.dose?' — '+m.dose:'')+(m.count?' ('+m.count+')':'');og.appendChild(o);});sel.appendChild(og);}if(an.length){var og2=document.createElement('optgroup');og2.label='As needed';an.forEach(function(m){var o=document.createElement('option');o.value=m.id;o.textContent=m.name+(m.dose?' — '+m.dose:'')+(m.count?' ('+m.count+')':'');og2.appendChild(o);});sel.appendChild(og2);}sel.value=prev;}
+function fillFromLib(){var id=parseInt(document.getElementById('med-select').value);if(!id)return;var m=meds.find(function(m){return m.id===id;});if(!m)return;document.getElementById('med-name').value=m.name||'';document.getElementById('med-dose').value=m.dose||'';document.getElementById('med-count-in').value=m.count||'';document.getElementById('med-notes').value=m.notes||'';}
+
+async function logMed(){var name=document.getElementById('med-name').value.trim();var time=document.getElementById('med-time').value;if(!name||!time){alert('Enter medication name and time.');return;}var who=document.getElementById('med-who').value.trim().toUpperCase();var e={type:'med',date:dispDate(document.getElementById('med-date').value),time:fmt(time),name:name,dose:document.getElementById('med-dose').value.trim(),count:document.getElementById('med-count-in').value.trim(),notes:[document.getElementById('med-notes').value.trim(),who?'by '+who:''].filter(Boolean).join(' — '),ts:Date.now()};entries.push(e);['med-name','med-dose','med-count-in','med-notes'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('med-select').value='';updateCounts();await saveEntry(e);toast('Medication logged');}
+async function logUrine(){var time=document.getElementById('urine-time').value;if(!time){alert('Enter time.');return;}var amt=document.getElementById('urine-amount').value;var who=document.getElementById('urine-who').value.trim().toUpperCase();var notes=document.getElementById('urine-notes').value.trim();var e={type:'urine',date:dispDate(document.getElementById('urine-date').value),time:fmt(time),amount:amt?parseInt(amt):null,color:selClr,notes:[notes,who?'by '+who:''].filter(Boolean).join(' — '),ts:Date.now()};entries.push(e);document.getElementById('urine-amount').value='';document.getElementById('urine-notes').value='';document.querySelectorAll('.color-btn').forEach(function(b){b.classList.remove('selected');});selClr='';document.getElementById('color-label').textContent='No color selected';updateCounts();await saveEntry(e);toast('Urine logged');}
+async function logActivity(){var name=document.getElementById('act-name').value.trim();var time=document.getElementById('act-time').value;if(!name||!time){alert('Enter activity and time.');return;}var who=document.getElementById('act-who').value.trim().toUpperCase();var e={type:'activity',date:dispDate(document.getElementById('act-date').value),time:fmt(time),name:name,notes:[document.getElementById('act-notes').value.trim(),who?'by '+who:''].filter(Boolean).join(' — '),ts:Date.now()};entries.push(e);document.getElementById('act-name').value='';document.getElementById('act-notes').value='';updateCounts();await saveEntry(e);updateActivitySuggestions();toast('Activity logged');}
+
+function updateActivitySuggestions(){var dl=document.getElementById('act-suggestions');if(!dl)return;var seen=new Set();var opts='';entries.filter(function(e){return e.type==='activity'&&e.name;}).forEach(function(e){if(!seen.has(e.name)){seen.add(e.name);opts+='<option value="'+escHtml(e.name)+'"/>';}});dl.innerHTML=opts;}
+
+async function addMed(){var name=document.getElementById('lib-name').value.trim();if(!name){alert('Enter name.');return;}var freq=document.getElementById('lib-freq').value;var days=document.getElementById('lib-days').value;var nd=document.getElementById('lib-nd').value;var nt=document.getElementById('lib-nt').value;var endDate=calcEnd(nd,days);var id=Date.now();var slots=selSlots.slice();var anOnly=slots.length===1&&slots[0]==='As needed';var m={id:id,name:name,dose:document.getElementById('lib-dose').value.trim(),count:document.getElementById('lib-count').value.trim(),notes:document.getElementById('lib-notes').value.trim(),slots:slots,freq:freq?parseInt(freq):null,days:days?parseInt(days):null,nextDate:nd&&!anOnly?dispDate(nd):'',nextTime:nt&&!anOnly?fmt(nt):'',endDate:!anOnly?endDate:''};meds.push(m);await saveMed(m);if(freq&&nd&&nt&&!anOnly){var r={id:id,active:true,name:name,dose:m.dose,count:m.count,freq:parseInt(freq),nextDate:dispDate(nd),nextTime:fmt(nt),endDate:endDate};reminders.push(r);await saveRem(r);}['lib-name','lib-dose','lib-count','lib-notes','lib-days'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('lib-freq').value='';resetSlots();if(addOpen)toggleAddForm();updateCounts();populateDropdown();renderMeds();toast('Medication added'+(freq&&!anOnly?' + reminder set':''));}
+
+function startEditMed(id){editMedId=editMedId===id?null:id;renderMeds();}
+function cancelEditMed(){editMedId=null;renderMeds();}
+async function saveEditMed(id){var m=meds.find(function(m){return m.id===id;});if(!m)return;var n=document.getElementById('me-name').value.trim();if(n)m.name=n;m.dose=document.getElementById('me-dose').value.trim();m.count=document.getElementById('me-count').value.trim();m.notes=document.getElementById('me-notes').value.trim();m.slots=ALL_SLOTS.filter(function(s){var el=document.getElementById('ms-'+s.replace(/\s+/g,'-'));return el&&el.checked;});var freq=document.getElementById('me-freq').value;var days=document.getElementById('me-days').value;var nd=document.getElementById('me-nd').value;var nt=document.getElementById('me-nt').value;m.freq=freq?parseInt(freq):null;m.days=days?parseInt(days):null;if(nd)m.nextDate=dispDate(nd);if(nt)m.nextTime=fmt(nt);m.endDate=calcEnd(nd||toId(m.nextDate),days);await saveMed(m);var ri=reminders.findIndex(function(r){return r.id===id;});if(freq&&m.nextDate&&m.nextTime){var rd={id:id,active:true,name:m.name,dose:m.dose,count:m.count,freq:parseInt(freq),nextDate:m.nextDate,nextTime:m.nextTime,endDate:m.endDate};if(ri>=0)reminders[ri]=rd;else reminders.push(rd);await saveRem(rd);}else if(ri>=0){reminders.splice(ri,1);await sbDelete('rl_reminders','id=eq.'+id);}updateCounts();populateDropdown();editMedId=null;renderMeds();var rp=document.getElementById('panel-reminders');if(rp&&rp.style.display!=='none')renderReminders();toast('Medication updated');}
+
+function slotsHtml(slots){if(!slots||!slots.length)return '';return slots.map(function(s){return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 8px;border-radius:20px;background:#e8f0fe;color:#1a56db;font-weight:600;margin:2px 2px 0 0;"><i class="ti '+(SLOT_ICONS[s]||'ti-clock')+'" style="font-size:11px;"></i>'+s+'</span>';}).join('');}
+function mkEl(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;}
+function mkInput(id,type,val,ph){var i=document.createElement('input');i.className='edit-input';i.type=type;i.id=id;i.value=val||'';if(ph)i.placeholder=ph;return i;}
+function mkLabel(txt){var l=document.createElement('label');l.className='edit-label';l.textContent=txt;return l;}
+
+function renderMeds(){var list=document.getElementById('med-lib-list');list.innerHTML='';if(!meds.length){list.innerHTML='<div class="empty">No medications yet.</div>';return;}var sc=meds.filter(function(m){return !isAsNeeded(m);});var an=meds.filter(function(m){return isAsNeeded(m);});if(sc.length){var l=mkEl('div','med-section-label');l.innerHTML='<i class="ti ti-bell" style="margin-right:5px;font-size:11px;"></i>Scheduled medications';list.appendChild(l);sc.forEach(function(m){list.appendChild(buildMedCard(m));});}if(an.length){var l2=mkEl('div','med-section-label');l2.innerHTML='<i class="ti ti-alert-circle" style="margin-right:5px;font-size:11px;"></i>As needed medications';list.appendChild(l2);an.forEach(function(m){list.appendChild(buildMedCard(m));});}}
+
+function buildMedCard(m){var isE=editMedId===m.id;var an=isAsNeeded(m);var card=mkEl('div','med-card'+(an?' as-needed-card':' scheduled-card')+(isE?' editing':''));var hdr=mkEl('div','entry-header');var info=mkEl('div');info.style.flex='1';info.style.minWidth='0';var nm=mkEl('div','med-name',m.name+(m.dose?' — '+m.dose:''));info.appendChild(nm);var remStr=an?'As needed':(m.freq?(m.freq===24?'Once daily':'Every '+m.freq+'h')+(m.days?' · '+m.days+'d':'')+(m.endDate?' · Until '+m.endDate:''):null);var dt=mkEl('div','med-detail',[m.count,m.notes,remStr].filter(Boolean).join(' · '));info.appendChild(dt);if(m.slots&&m.slots.length){var sw=mkEl('div');sw.style.marginTop='4px';sw.innerHTML=slotsHtml(m.slots);info.appendChild(sw);}if(!an&&m.nextDate&&m.nextTime){var nd=mkEl('div');nd.style.cssText='font-size:11px;color:#999;margin-top:4px;';nd.innerHTML='<i class="ti ti-bell" style="margin-right:3px;"></i>Next: '+m.nextDate+' at '+m.nextTime;info.appendChild(nd);}var acts=mkEl('div','entry-actions');var eb=mkEl('button','btn-sm');eb.innerHTML='<i class="ti ti-edit"></i>';eb.onclick=function(){startEditMed(m.id);};var db=mkEl('button','btn-danger');db.innerHTML='<i class="ti ti-trash"></i>';db.onclick=function(){delMed(m.id);};acts.appendChild(eb);acts.appendChild(db);hdr.appendChild(info);hdr.appendChild(acts);card.appendChild(hdr);
+if(isE){var form=mkEl('div','edit-form');var r1=mkEl('div','edit-row');var nd2=mkEl('div');nd2.appendChild(mkLabel('Name'));nd2.appendChild(mkInput('me-name','text',m.name));var dd=mkEl('div');dd.appendChild(mkLabel('Dose'));dd.appendChild(mkInput('me-dose','text',m.dose));r1.appendChild(nd2);r1.appendChild(dd);form.appendChild(r1);var r2=mkEl('div','edit-row');var cd=mkEl('div');cd.appendChild(mkLabel('Count'));cd.appendChild(mkInput('me-count','text',m.count));var ntd=mkEl('div');ntd.appendChild(mkLabel('Notes'));ntd.appendChild(mkInput('me-notes','text',m.notes));r2.appendChild(cd);r2.appendChild(ntd);form.appendChild(r2);var sw2=mkEl('div');sw2.style.marginBottom='10px';sw2.appendChild(mkLabel('When to take'));var sg=mkEl('div');sg.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;';ALL_SLOTS.forEach(function(s){var lbl=document.createElement('label');lbl.style.cssText='display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;';var cb=document.createElement('input');cb.type='checkbox';cb.id='ms-'+s.replace(/\s+/g,'-');cb.style.width='auto';if(m.slots&&m.slots.indexOf(s)>=0)cb.checked=true;lbl.appendChild(cb);lbl.appendChild(document.createTextNode(s));sg.appendChild(lbl);});sw2.appendChild(sg);form.appendChild(sw2);var r3=mkEl('div','edit-row');var fd=mkEl('div');fd.appendChild(mkLabel('Frequency'));var fs=document.createElement('select');fs.className='edit-input';fs.id='me-freq';[['','No reminder'],['4','Every 4h'],['6','Every 6h'],['8','Every 8h'],['12','Every 12h'],['24','Once daily']].forEach(function(vt){var o=document.createElement('option');o.value=vt[0];o.textContent=vt[1];if(String(m.freq)==vt[0])o.selected=true;fs.appendChild(o);});fd.appendChild(fs);var dyd=mkEl('div');dyd.appendChild(mkLabel('Days'));dyd.appendChild(mkInput('me-days','number',m.days||''));r3.appendChild(fd);r3.appendChild(dyd);form.appendChild(r3);var r4=mkEl('div','edit-row');var ndd=mkEl('div');ndd.appendChild(mkLabel('Next date'));ndd.appendChild(mkInput('me-nd','date',toId(m.nextDate)));var ntd2=mkEl('div');ntd2.appendChild(mkLabel('Next time'));ntd2.appendChild(mkInput('me-nt','time',toIt(m.nextTime)));r4.appendChild(ndd);r4.appendChild(ntd2);form.appendChild(r4);var ac=mkEl('div');ac.style.cssText='display:flex;gap:6px;justify-content:flex-end;margin-top:8px;';var cb2=mkEl('button','btn-sm','Cancel');cb2.onclick=cancelEditMed;var sb=mkEl('button','btn-save','Save');sb.onclick=function(){saveEditMed(m.id);};ac.appendChild(cb2);ac.appendChild(sb);form.appendChild(ac);card.appendChild(form);}
+return card;}
+
+function nextMs(r){if(!r.nextDate||!r.nextTime)return null;var t=r.nextTime.match(/(\d+):(\d+)\s*(AM|PM)/i);if(!t)return null;var h=parseInt(t[1]);var ap=t[3].toUpperCase();if(ap==='PM'&&h!==12)h+=12;if(ap==='AM'&&h===12)h=0;var dp=r.nextDate.split('/');return new Date(parseInt(dp[2]),parseInt(dp[0])-1,parseInt(dp[1]),h,parseInt(t[2]),0).getTime();}
+function endMs(r){if(!r.endDate)return null;var dp=r.endDate.split('/');return new Date(parseInt(dp[2]),parseInt(dp[0])-1,parseInt(dp[1]),23,59,59).getTime();}
+function fmtCd(ms){var s=Math.floor(ms/1000);var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return(h>0?h+'h ':'')+m+'m '+sc+'s';}
+async function advanceDose(r){var f=parseInt(r.freq);if(!f)return;var ms=nextMs(r);if(!ms)return;var next=new Date(ms+f*3600*1000);r.nextDate=next.toLocaleDateString();r.nextTime=next.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});var m=meds.find(function(m){return m.id===r.id;});if(m){m.nextDate=r.nextDate;m.nextTime=r.nextTime;await saveMed(m);}await saveRem(r);}
+async function markTaken(id){var r=reminders.find(function(r){return r.id===id;});if(!r)return;var now=new Date();var e={type:'med',date:now.toLocaleDateString(),time:now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),name:r.name,dose:r.dose||'',count:r.count||'',notes:'via reminder',ts:Date.now()};entries.push(e);await saveEntry(e);await advanceDose(r);updateCounts();renderReminders();toast(r.name+' logged!');}
+async function skipDose(id){var r=reminders.find(function(r){return r.id===id;});if(!r)return;var now=new Date();var e={type:'skipped',date:now.toLocaleDateString(),time:now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),name:r.name,dose:r.dose||'',count:r.count||'',notes:'dose skipped',ts:Date.now()};entries.push(e);await saveEntry(e);await advanceDose(r);updateCounts();renderReminders();toast(r.name+' skipped.');}
+async function logAsNeeded(id){var m=meds.find(function(m){return m.id===id;});if(!m)return;var now=new Date();var e={type:'med',date:now.toLocaleDateString(),time:now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),name:m.name,dose:m.dose||'',count:m.count||'',notes:'as needed',ts:Date.now()};entries.push(e);await saveEntry(e);updateCounts();toast(m.name+' logged!');}
+
+function checkNotifPerm(){if('Notification' in window&&Notification.permission==='default')document.getElementById('notif-bar').style.display='block';}
+function askNotif(){Notification.requestPermission().then(function(p){var b=document.getElementById('notif-bar');if(p==='granted'){b.style.display='none';toast('Notifications enabled!');}else b.innerHTML='<i class="ti ti-bell-off"></i> Notifications blocked. Countdown still works here.';});}
+var lastNotified={};
+function checkNotifications(){if(!('Notification' in window)||Notification.permission!=='granted')return;var now=Date.now();reminders.forEach(function(r){if(!r.active)return;var ms=nextMs(r);if(!ms)return;var diff=ms-now;if(diff<=0&&diff>-60000&&(!lastNotified[r.id]||now-lastNotified[r.id]>60000)){lastNotified[r.id]=now;var notif=new Notification('Time for '+r.name+'!',{body:'Open the app to Log it or Skip.',requireInteraction:true});notif.onclick=function(){window.focus();switchTab('reminders');};}});}
+function startTicker(){if(ticker)clearInterval(ticker);ticker=setInterval(function(){var p=document.getElementById('panel-reminders');if(p&&p.style.display!=='none')renderReminders();checkNotifications();},1000);}
+
+function startEditRem(id){editRemId=editRemId===id?null:id;renderReminders();}
+function cancelEditRem(){editRemId=null;renderReminders();}
+async function saveEditRem(id){var r=reminders.find(function(r){return r.id===id;});if(!r)return;var n=document.getElementById('re-name').value.trim();if(n)r.name=n;r.dose=document.getElementById('re-dose').value.trim();r.count=document.getElementById('re-count').value.trim();var f=document.getElementById('re-freq').value;if(f)r.freq=parseInt(f);var days=document.getElementById('re-days').value;var nd=document.getElementById('re-nd').value;var nt=document.getElementById('re-nt').value;if(nd)r.nextDate=dispDate(nd);if(nt)r.nextTime=fmt(nt);r.endDate=calcEnd(nd||toId(r.nextDate),days);await saveRem(r);var m=meds.find(function(m){return m.id===id;});if(m){m.name=r.name;m.dose=r.dose;m.count=r.count;m.freq=r.freq;m.days=days?parseInt(days):m.days;m.nextDate=r.nextDate;m.nextTime=r.nextTime;m.endDate=r.endDate;await saveMed(m);populateDropdown();}editRemId=null;updateCounts();renderReminders();toast('Reminder updated');}
+
+function renderReminders(){
+  var list=document.getElementById('rem-list');if(!list)return;
+  var active=reminders.filter(function(r){return r.active;});
+  var asnMeds=meds.filter(function(m){return isAsNeeded(m);});
+  if(!active.length&&!asnMeds.length){list.innerHTML='<div class="empty">No reminders yet.</div>';return;}
+  var now=Date.now();var html='';
+  if(active.length){
+    html+='<div class="rem-section-label"><i class="ti ti-bell" style="margin-right:5px;font-size:11px;"></i>Scheduled</div>';
+    // Sort by next dose time — soonest first, done/overdue at top
+    var sorted=active.slice().sort(function(a,b){
+      var ma=nextMs(a)||Infinity; var mb=nextMs(b)||Infinity;
+      var ea=endMs(a); var eb=endMs(b);
+      var da=ea&&now>ea; var db=eb&&now>eb;
+      if(da&&!db)return 1; if(!da&&db)return -1;
+      return ma-mb;
+    });
+    sorted.forEach(function(r){
+      var ms=nextMs(r);var em=endMs(r);var done=em&&now>em;var diff=ms?ms-now:null;var overdue=diff!==null&&diff<0&&!done;
+      var cdHtml='';var prHtml='';
+      if(done){cdHtml='<div class="countdown done"><i class="ti ti-check"></i> Treatment complete</div>';}
+      else if(diff!==null){var cd=fmtCd(Math.abs(diff));var lbl=overdue?'Overdue by '+cd:(diff<30*60*1000?'Due in '+cd:'Next dose in '+cd);cdHtml='<div class="countdown'+(overdue?' overdue':'')+'">'+lbl+'</div>';if(r.freq&&diff>0){var pct=Math.max(0,Math.min(100,100-(diff/(r.freq*3600*1000))*100));prHtml='<div class="progress-wrap"><div class="progress-bar" style="width:'+pct.toFixed(1)+'%"></div></div>';}}
+      var m=meds.find(function(m){return m.id===r.id;});
+      var slots=m&&m.slots&&m.slots.length?'<div style="margin-top:4px;">'+slotsHtml(m.slots)+'</div>':'';
+      var fl=r.freq===24?'Once daily':'Every '+r.freq+'h';var dl=m&&m.days?' · '+m.days+'d':'';
+      // Always show Log it / Skip (not just when overdue)
+      var actionBox=!done?'<div class="overdue-box" style="border-top-color:'+(overdue?'#fca5a5':'#c7d9fd')+'"><div class="overdue-title" style="color:'+(overdue?'#991b1b':'#1a56db')+'"><i class="ti '+(overdue?'ti-bell-ringing':'ti-pill')+'" style="margin-right:5px;"></i>'+(overdue?'Dose is overdue — what happened?':'Log this dose')+'</div><div class="action-row"><button class="btn-log" onclick="markTaken('+r.id+')"><i class="ti ti-check" style="margin-right:4px;"></i>Log it</button><button class="btn-skip" onclick="skipDose('+r.id+')"><i class="ti ti-x" style="margin-right:4px;"></i>Skip</button></div></div>':'';
+      html+='<div class="reminder-card'+(overdue?' overdue-card':'')+'"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;"><div><div class="reminder-name"><i class="ti ti-pill" style="margin-right:6px;"></i>'+escHtml(r.name)+(r.dose?' — '+escHtml(r.dose):'')+'</div><div class="reminder-meta">'+(r.count?escHtml(r.count)+' · ':'')+fl+dl+(r.endDate?' · Until '+r.endDate:'')+'</div>'+slots+'</div></div>'+cdHtml+prHtml+(!done?'<div style="font-size:12px;color:#999;margin-top:6px;">Next: '+r.nextDate+' at '+r.nextTime+'</div>':'')+actionBox+'</div>';
+    });
+  }
+  if(asnMeds.length){
+    html+='<div class="rem-section-label"><i class="ti ti-alert-circle" style="margin-right:5px;font-size:11px;"></i>As needed</div>';
+    asnMeds.forEach(function(m){html+='<div class="reminder-card asn-card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"><div><div class="reminder-name"><i class="ti ti-pill" style="margin-right:6px;"></i>'+escHtml(m.name)+(m.dose?' — '+escHtml(m.dose):'')+'</div><div class="reminder-meta">'+(m.count?escHtml(m.count)+' · ':'')+'Take as needed'+(m.notes?' · '+escHtml(m.notes):'')+'</div></div><button class="btn-log" onclick="logAsNeeded('+m.id+')" style="background:#a855f7;"><i class="ti ti-plus" style="margin-right:4px;"></i>Log dose</button></div></div>';});
+  }
+  list.innerHTML=html;
+}
+
+function sortKey(e){var dp=(e.date||'').split('/');var nd=dp.length===3?dp[2]+'-'+dp[0].padStart(2,'0')+'-'+dp[1].padStart(2,'0'):e.date||'';var tp=(e.time||'').match(/(\d+):(\d+)\s*(AM|PM)/i);var nt='00:00';if(tp){var h=parseInt(tp[1]);var ap=tp[3].toUpperCase();if(ap==='PM'&&h!==12)h+=12;if(ap==='AM'&&h===12)h=0;nt=String(h).padStart(2,'0')+':'+tp[2];}return nd+' '+nt;}
+
+function buildHistEdit(e,container){var form=mkEl('div','edit-form');var dr=mkEl('div','edit-row');var dc=mkEl('div');dc.appendChild(mkLabel('Date'));dc.appendChild(mkInput('he-date','date',toId(e.date)));var tc=mkEl('div');tc.appendChild(mkLabel('Time'));tc.appendChild(mkInput('he-time','time',toIt(e.time)));dr.appendChild(dc);dr.appendChild(tc);form.appendChild(dr);
+if(e.type==='med'||e.type==='skipped'){var r1=mkEl('div','edit-row');var n=mkEl('div');n.appendChild(mkLabel('Name'));n.appendChild(mkInput('he-name','text',e.name));var d=mkEl('div');d.appendChild(mkLabel('Dose'));d.appendChild(mkInput('he-dose','text',e.dose));r1.appendChild(n);r1.appendChild(d);form.appendChild(r1);var r2=mkEl('div','edit-row');var c=mkEl('div');c.appendChild(mkLabel('Count'));c.appendChild(mkInput('he-count','text',e.count));var nt=mkEl('div');nt.appendChild(mkLabel('Notes'));nt.appendChild(mkInput('he-notes','text',e.notes));r2.appendChild(c);r2.appendChild(nt);form.appendChild(r2);}
+else if(e.type==='urine'){editClr=e.color||'';var r1=mkEl('div','edit-row');var a=mkEl('div');a.appendChild(mkLabel('Amount (mL)'));var ai=mkInput('he-amount','number',e.amount||'');ai.min='0';a.appendChild(ai);var nt2=mkEl('div');nt2.appendChild(mkLabel('Notes'));nt2.appendChild(mkInput('he-notes','text',e.notes));r1.appendChild(a);r1.appendChild(nt2);form.appendChild(r1);var cl=mkEl('div');cl.style.marginBottom='8px';cl.appendChild(mkLabel('Color'));var cg=mkEl('div','color-grid');COLORS.forEach(function(c){var btn=document.createElement('button');btn.className='color-btn'+(e.color===c.l?' selected':'');btn.style.background=c.bg;btn.style.color=c.c;btn.textContent=c.l;btn.onclick=function(){document.querySelectorAll('.color-btn').forEach(function(b){b.classList.remove('selected');});btn.classList.add('selected');editClr=c.l;};cg.appendChild(btn);});cl.appendChild(cg);form.appendChild(cl);}
+else{var r1=mkEl('div','edit-row');var n=mkEl('div');n.appendChild(mkLabel('Activity'));n.appendChild(mkInput('he-name','text',e.name));var nt3=mkEl('div');nt3.appendChild(mkLabel('Notes'));nt3.appendChild(mkInput('he-notes','text',e.notes));r1.appendChild(n);r1.appendChild(nt3);form.appendChild(r1);}
+var ac=mkEl('div');ac.style.cssText='display:flex;gap:6px;justify-content:flex-end;margin-top:8px;';var cb=mkEl('button','btn-sm','Cancel');cb.onclick=function(){editTs=null;renderHistory();};var sb=mkEl('button','btn-save','Save');sb.onclick=function(){saveHistEdit(e.ts);};ac.appendChild(cb);ac.appendChild(sb);form.appendChild(ac);container.appendChild(form);}
+
+async function saveHistEdit(ts){var idx=entries.findIndex(function(e){return e.ts===ts;});if(idx===-1)return;var e=entries[idx];var nd=document.getElementById('he-date').value;var nt=document.getElementById('he-time').value;if(nd)e.date=dispDate(nd);if(nt)e.time=fmt(nt);if(e.type==='med'||e.type==='skipped'){var n=document.getElementById('he-name').value.trim();if(n)e.name=n;e.dose=document.getElementById('he-dose').value.trim();e.count=document.getElementById('he-count').value.trim();e.notes=document.getElementById('he-notes').value.trim();}else if(e.type==='urine'){var amt=document.getElementById('he-amount').value;e.amount=amt?parseInt(amt):null;if(editClr)e.color=editClr;e.notes=document.getElementById('he-notes').value.trim();}else{var n2=document.getElementById('he-name').value.trim();if(n2)e.name=n2;e.notes=document.getElementById('he-notes').value.trim();}editTs=null;await saveEntry(e);renderHistory();toast('Entry updated');}
+
+function renderHistory(){var filter=document.getElementById('hist-filter').value;var filtered=entries.filter(function(e){return filter==='all'||(filter==='skipped'?e.type==='skipped':e.type===filter);});var sorted=filtered.slice().sort(function(a,b){return sortKey(a)<sortKey(b)?-1:1;});var list=document.getElementById('hist-list');list.innerHTML='';if(!sorted.length){list.innerHTML='<div class="empty">No entries yet.</div>';return;}var lastDate='';sorted.forEach(function(e){var isE=editTs===e.ts;if(e.date!==lastDate){var div=mkEl('div','date-divider',e.date||'Unknown date');list.appendChild(div);lastDate=e.date;}var card=mkEl('div','entry'+(isE?' editing':''));var hdr=mkEl('div','entry-header');var info=mkEl('div','entry-info');if(e.type==='med'){var b=mkEl('div','badge badge-med','Medication');info.appendChild(b);var t=mkEl('div','entry-title',e.name);info.appendChild(t);var d=mkEl('div','entry-detail',[e.time,e.dose,e.count,e.notes].filter(Boolean).join(' · '));info.appendChild(d);}else if(e.type==='skipped'){var b=mkEl('div','badge badge-skipped','Skipped');info.appendChild(b);var t=mkEl('div','entry-title',e.name);info.appendChild(t);var d=mkEl('div','entry-detail',[e.time,e.dose,e.notes].filter(Boolean).join(' · '));info.appendChild(d);}else if(e.type==='urine'){var b=mkEl('div','badge badge-urine','Urine');info.appendChild(b);var t=mkEl('div','entry-title',e.time);info.appendChild(t);var p=[];if(e.amount)p.push(e.amount+' mL');if(e.color)p.push(e.color);if(e.notes)p.push(e.notes);var d=mkEl('div','entry-detail',p.join(' · ')||'No details');info.appendChild(d);}else{var b=mkEl('div','badge badge-activity','Activity');info.appendChild(b);var t=mkEl('div','entry-title',e.name);info.appendChild(t);var d=mkEl('div','entry-detail',[e.time,e.notes].filter(Boolean).join(' · '));info.appendChild(d);}var acts=mkEl('div','entry-actions');var eb=mkEl('button','btn-sm');eb.innerHTML='<i class="ti ti-edit"></i>';eb.onclick=function(){editTs=editTs===e.ts?null:e.ts;renderHistory();};var db=mkEl('button','btn-danger');db.innerHTML='<i class="ti ti-trash"></i>';db.onclick=function(){deleteEntry(e.ts);};acts.appendChild(eb);acts.appendChild(db);hdr.appendChild(info);hdr.appendChild(acts);card.appendChild(hdr);if(isE)buildHistEdit(e,card);list.appendChild(card);});}
+
+function exportLog(){var lines=[];var sep='==========================================';lines.push('RECOVERY LOG FULL EXPORT');lines.push('Date: '+new Date().toLocaleString());lines.push(sep);var sc=meds.filter(function(m){return !isAsNeeded(m);});var an=meds.filter(function(m){return isAsNeeded(m);});lines.push('');lines.push('MEDICATIONS ('+meds.length+' total)');lines.push(sep);if(sc.length){lines.push('');lines.push('-- Scheduled --');sc.forEach(function(m){lines.push('MED: '+m.name+(m.dose?' | Dose: '+m.dose:'')+(m.count?' | Count: '+m.count:''));if(m.slots&&m.slots.length)lines.push('  When: '+m.slots.join(', '));if(m.freq)lines.push('  Frequency: '+(m.freq===24?'Once daily':'Every '+m.freq+'h')+(m.days?' | Days: '+m.days:''));if(m.endDate)lines.push('  Until: '+m.endDate);if(m.nextDate&&m.nextTime)lines.push('  Next dose: '+m.nextDate+' at '+m.nextTime);if(m.notes)lines.push('  Notes: '+m.notes);});}if(an.length){lines.push('');lines.push('-- As needed --');an.forEach(function(m){lines.push('MED: '+m.name+(m.dose?' | Dose: '+m.dose:'')+(m.count?' | Count: '+m.count:''));if(m.notes)lines.push('  Notes: '+m.notes);});}var activeRem=reminders.filter(function(r){return r.active;});if(activeRem.length){lines.push('');lines.push('ACTIVE REMINDERS ('+activeRem.length+' total)');lines.push(sep);lines.push('');activeRem.forEach(function(r){lines.push('REM: '+r.name+(r.dose?' | Dose: '+r.dose:'')+(r.count?' | Count: '+r.count:''));lines.push('  Frequency: '+(r.freq===24?'Once daily':'Every '+r.freq+'h'));if(r.endDate)lines.push('  Until: '+r.endDate);if(r.nextDate&&r.nextTime)lines.push('  Next dose: '+r.nextDate+' at '+r.nextTime);});}lines.push('');lines.push('HISTORY LOG ('+entries.length+' entries)');lines.push(sep);if(!entries.length){lines.push('');lines.push('No entries.');}else{var sorted=entries.slice().sort(function(a,b){return sortKey(a)<sortKey(b)?-1:1;});var lastDate='';sorted.forEach(function(e){if(e.date!==lastDate){lines.push('');lines.push('--- '+e.date+' ---');lastDate=e.date;}if(e.type==='med')lines.push('['+e.time+'] MEDICATION: '+e.name+(e.dose?' '+e.dose:'')+(e.count?' | '+e.count:'')+(e.notes?' ('+e.notes+')':''));else if(e.type==='skipped')lines.push('['+e.time+'] SKIPPED: '+e.name+(e.dose?' '+e.dose:''));else if(e.type==='urine'){var p=[];if(e.amount)p.push(e.amount+' mL');if(e.color)p.push(e.color);if(e.notes)p.push(e.notes);lines.push('['+e.time+'] URINE: '+(p.join(', ')||'logged'));}else lines.push('['+e.time+'] ACTIVITY: '+e.name+(e.notes?' ('+e.notes+')':''));});}lines.push('');lines.push(sep);lines.push('END OF EXPORT');var blob=new Blob([lines.join('\n')],{type:'text/plain'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='recovery-log-'+new Date().toISOString().slice(0,10)+'.txt';a.click();toast('Full export downloaded');}
+
+function importLog(event){
+  var file=event.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var lines=ev.target.result.split('\n');
+    var currentDate='';
+    var imported=0;var skipped=0;
+    var section=''; // 'history', 'meds', 'reminders'
+
+    // Build a signature set to detect duplicates by content, not just ts
+    var existingSigs=new Set(entries.map(function(e){
+      return (e.date||'')+'|'+(e.time||'')+'|'+(e.type||'')+'|'+(e.name||e.amount||'');
+    }));
+
+    var toInsertEntries=[];
+
+    lines.forEach(function(line){
+      var trimmed=line.trim();
+
+      // Detect section headers
+      if(trimmed==='-- Scheduled --'||trimmed==='-- As needed --'||trimmed.indexOf('MEDICATIONS')==0){section='meds';return;}
+      if(trimmed.indexOf('ACTIVE REMINDERS')==0){section='reminders';return;}
+      if(trimmed.indexOf('HISTORY LOG')==0){section='history';currentDate='';return;}
+      if(trimmed.indexOf('END OF EXPORT')>=0||trimmed.indexOf('====')>=0)return;
+
+      if(section==='history'||section===''){
+        // Date header
+        var dateMatch=trimmed.match(/^---\s+(.+?)\s+---$/);
+        if(dateMatch){currentDate=dateMatch[1].trim();return;}
+        if(!currentDate)return;
+
+        var timeMatch=trimmed.match(/^\[(\d+:\d+\s*(?:AM|PM))\]\s+(MEDICATION|URINE|ACTIVITY|SKIPPED):\s*(.+)/i);
+        if(!timeMatch)return;
+
+        var time=timeMatch[1].trim();
+        var type=timeMatch[2].toUpperCase();
+        var rest=timeMatch[3].trim();
+
+        // Deduplicate by content signature
+        var sig=currentDate+'|'+time+'|'+type+'|'+rest.split('|')[0].trim().split(' ')[0];
+        if(existingSigs.has(sig)){skipped++;return;}
+        existingSigs.add(sig);
+
+        // Generate stable ts
+        var stableStr=currentDate+'|'+time+'|'+type+'|'+rest;
+        var stableTs=0;
+        for(var i=0;i<stableStr.length;i++){stableTs=((stableTs<<5)-stableTs+stableStr.charCodeAt(i))|0;}
+        stableTs=Math.abs(stableTs)+3000000000;
+        // Make sure ts is unique
+        while(toInsertEntries.some(function(e){return e.ts===stableTs;}))stableTs++;
+
+        var entry={date:currentDate,time:time,ts:stableTs};
+        if(type==='MEDICATION'){
+          entry.type='med';
+          var noteMatch=rest.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+          var main=noteMatch?noteMatch[1].trim():rest;
+          entry.notes=noteMatch?noteMatch[2].trim():'';
+          var parts=main.split('|').map(function(s){return s.trim();});
+          entry.name=parts[0].split(/\s+(?=\d)/)[0].trim()||parts[0];
+          entry.dose='';entry.count='';
+          parts.forEach(function(p){
+            if(p.indexOf('Dose:')===0)entry.dose=p.replace('Dose:','').trim();
+            if(p.indexOf('Count:')===0)entry.count=p.replace('Count:','').trim();
+          });
+        } else if(type==='URINE'){
+          entry.type='urine';
+          var p=rest.split(',').map(function(s){return s.trim();});
+          entry.amount=parseInt(p[0])||null;entry.color=p[1]||'';entry.notes=p[2]||'';
+        } else if(type==='ACTIVITY'){
+          entry.type='activity';
+          var nm=rest.match(/^(.+?)(?:\s*\((.+)\))?$/);
+          entry.name=nm?nm[1].trim():rest;entry.notes=nm&&nm[2]?nm[2]:'';
+        } else if(type==='SKIPPED'){
+          entry.type='skipped';
+          entry.name=rest.split(' ')[0]||rest;
+          entry.dose=rest.split(' ').slice(1).join(' ');
+          entry.notes='dose skipped';
+        }
+        entries.push(entry);toInsertEntries.push(entry);imported++;
+      }
+    });
+
+    // Save to Supabase and re-render
+    if(toInsertEntries.length>0){
+      sbUpsert('rl_entries',toInsertEntries.map(entryToRow));
+    }
+    entries.sort(function(a,b){return sortKey(a)<sortKey(b)?-1:1;});
+    updateCounts();
+    event.target.value='';
+    if(imported>0){
+      toast(imported+' entries imported'+(skipped?' ('+skipped+' duplicates skipped)':''));
+      renderHistory();
+    } else {
+      toast('No new entries found'+(skipped?' — '+skipped+' duplicates skipped':''));
+    }
+  };
+  reader.readAsText(file);
+}
+
+function getReportEntries(){
+  var range=document.getElementById('report-range').value;
+  var cw=document.getElementById('report-custom-wrap');
+  var ctw=document.getElementById('report-custom-to-wrap');
+  cw.style.display=range==='custom'?'block':'none';
+  ctw.style.display=range==='custom'?'block':'none';
+  var urine=entries.filter(function(e){return e.type==='urine';});
+  if(range==='all')return urine;
+  if(range==='custom'){
+    var from=document.getElementById('report-from').value;
+    var to=document.getElementById('report-to').value;
+    return urine.filter(function(e){
+      var ed=toId(e.date);
+      return(!from||ed>=from)&&(!to||ed<=to);
+    });
+  }
+  var days=parseInt(range);
+  var cutoff=new Date();cutoff.setDate(cutoff.getDate()-days+1);cutoff.setHours(0,0,0,0);
+  return urine.filter(function(e){
+    var dp=e.date.split('/');if(dp.length!==3)return false;
+    var ed=new Date(parseInt(dp[2]),parseInt(dp[0])-1,parseInt(dp[1]));
+    return ed>=cutoff;
+  });
+}
+
+function renderReports(){
+  var rc=document.getElementById('report-content');if(!rc)return;
+  var urine=getReportEntries();
+
+  if(!urine.length){rc.innerHTML='<div class="empty">No urine entries found for this period.</div>';return;}
+
+  // Group by date
+  var byDate={};
+  urine.forEach(function(e){
+    if(!byDate[e.date])byDate[e.date]={'entries':[],'total':0,'count':0};
+    byDate[e.date].entries.push(e);
+    byDate[e.date].count++;
+    if(e.amount)byDate[e.date].total+=e.amount;
+  });
+  var dates=Object.keys(byDate).sort(function(a,b){return toId(a)<toId(b)?-1:1;});
+  var numDays=dates.length;
+
+  // Overall stats
+  var totalVoid=urine.length;
+  var withAmount=urine.filter(function(e){return e.amount;});
+  var totalMl=withAmount.reduce(function(s,e){return s+e.amount;},0);
+  var avgMl=withAmount.length?Math.round(totalMl/withAmount.length):0;
+  var avgPerDay=(totalVoid/numDays).toFixed(1);
+  var avgMlPerDay=numDays?Math.round(totalMl/numDays):0;
+
+  // Color breakdown
+  var colorMap={};
+  urine.forEach(function(e){var c=e.color||'Not recorded';colorMap[c]=(colorMap[c]||0)+1;});
+  var colorEntries=Object.entries(colorMap).sort(function(a,b){return b[1]-a[1];});
+  var colorSwatches={'Clear':'#f0f8ff','Pale yellow':'#fff9c4','Yellow':'#fdd835','Dark yellow':'#f9a825','Orange':'#e65100','Pink/red':'#b71c1c','Not recorded':'#ddd'};
+  var colorTextColors={'Clear':'#1a4a6b','Pale yellow':'#7a6500','Yellow':'#5a4100','Dark yellow':'#4a2d00','Orange':'#fff','Pink/red':'#fff','Not recorded':'#999'};
+  var dominantColor=colorEntries[0]?colorEntries[0][0]:'Unknown';
+
+  // Alerts
+  var alerts='';
+  var recentEntries=urine.slice(-3);
+  var darkCount=recentEntries.filter(function(e){return e.color==='Dark yellow'||e.color==='Orange'||e.color==='Pink/red';}).length;
+  if(darkCount>=2)alerts+='<div class="alert-box alert-warn"><i class="ti ti-alert-triangle" style="margin-right:6px;"></i><strong>Attention:</strong> Recent urine color appears dark. Consider increasing fluid intake and alerting the care team.</div>';
+  if(avgMl>0&&avgMl<150)alerts+='<div class="alert-box alert-warn"><i class="ti ti-droplet-off" style="margin-right:6px;"></i><strong>Low output per void:</strong> Average of '+avgMl+'mL per void is below normal. Monitor closely.</div>';
+  if(avgMlPerDay>0&&avgMlPerDay>=800)alerts+='<div class="alert-box alert-good"><i class="ti ti-check" style="margin-right:6px;"></i><strong>Good hydration:</strong> Daily output of '+avgMlPerDay+'mL/day looks healthy.</div>';
+  if(dominantColor==='Pale yellow'||dominantColor==='Clear')alerts+='<div class="alert-box alert-good"><i class="ti ti-droplet" style="margin-right:6px;"></i><strong>Good color:</strong> Most voids are '+dominantColor.toLowerCase()+', indicating good hydration.</div>';
+
+  // Stats boxes
+  var statsHtml='<div class="stat-grid">'
+    +'<div class="stat-box"><div class="stat-value">'+totalVoid+'</div><div class="stat-label">Total voids</div><div class="stat-sub">over '+numDays+' day'+(numDays!==1?'s':'')+'</div></div>'
+    +'<div class="stat-box"><div class="stat-value">'+avgPerDay+'</div><div class="stat-label">Avg per day</div><div class="stat-sub">voids / day</div></div>'
+    +'<div class="stat-box"><div class="stat-value">'+(avgMl||'—')+'</div><div class="stat-label">Avg per void</div><div class="stat-sub">mL</div></div>'
+    +'<div class="stat-box"><div class="stat-value">'+(avgMlPerDay||'—')+'</div><div class="stat-label">Avg per day</div><div class="stat-sub">mL / day</div></div>'
+    +'</div>';
+
+  // Color breakdown bars
+  var colorHtml='<div class="report-section">Color breakdown</div><div class="color-bar-wrap">';
+  colorEntries.forEach(function(ce){
+    var c=ce[0];var n=ce[1];var pct=Math.round(n/totalVoid*100);
+    var sw=colorSwatches[c]||'#ddd';
+    colorHtml+='<div class="color-bar-row">'
+      +'<div class="color-swatch" style="background:'+sw+';"></div>'
+      +'<div class="color-bar-label">'+c+'</div>'
+      +'<div class="color-bar-bg"><div class="color-bar-fill" style="width:'+pct+'%;background:'+sw+';border:1px solid rgba(0,0,0,0.08);"></div></div>'
+      +'<div class="color-bar-pct">'+pct+'%</div>'
+      +'</div>';
+  });
+  colorHtml+='</div>';
+
+  // By day table
+  var dayHtml='<div class="report-section">By day</div>'
+    +'<table class="day-table"><thead><tr><th>Date</th><th>Voids</th><th>Total mL</th><th>Avg mL</th><th>Most common color</th></tr></thead><tbody>';
+  dates.forEach(function(date){
+    var d=byDate[date];
+    var wa=d.entries.filter(function(e){return e.amount;});
+    var avg=wa.length?Math.round(d.total/wa.length):0;
+    var dc={};d.entries.forEach(function(e){var c=e.color||'Not recorded';dc[c]=(dc[c]||0)+1;});
+    var topColor=Object.entries(dc).sort(function(a,b){return b[1]-a[1];})[0];
+    var sw=topColor?colorSwatches[topColor[0]]||'#ddd':'#ddd';
+    var tc=topColor?topColor[0]:'—';
+    dayHtml+='<tr>'
+      +'<td>'+date+'</td>'
+      +'<td>'+d.count+'</td>'
+      +'<td>'+(d.total||'—')+'</td>'
+      +'<td>'+(avg||'—')+'</td>'
+      +'<td><span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:'+sw+';border:1px solid rgba(0,0,0,0.1);display:inline-block;"></span>'+tc+'</span></td>'
+      +'</tr>';
+  });
+  dayHtml+='</tbody></table>';
+
+  // Individual log
+  var logHtml='<div class="report-section">Individual entries</div>'
+    +'<table class="day-table"><thead><tr><th>Date</th><th>Time</th><th>mL</th><th>Color</th><th>Notes</th></tr></thead><tbody>';
+  var sortedUrine=urine.slice().sort(function(a,b){return sortKey(a)<sortKey(b)?-1:1;});
+  sortedUrine.forEach(function(e){
+    var sw=colorSwatches[e.color]||'#ddd';
+    logHtml+='<tr>'
+      +'<td>'+e.date+'</td>'
+      +'<td>'+e.time+'</td>'
+      +'<td>'+(e.amount||'—')+'</td>'
+      +'<td><span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:'+sw+';border:1px solid rgba(0,0,0,0.1);display:inline-block;"></span>'+(e.color||'—')+'</span></td>'
+      +'<td style="color:#999;">'+(e.notes||'—')+'</td>'
+      +'</tr>';
+  });
+  logHtml+='</tbody></table>';
+
+  rc.innerHTML=alerts+statsHtml+colorHtml+dayHtml+logHtml;
+}
+
+function toast(msg){var t=document.createElement('div');t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'20px',left:'50%',transform:'translateX(-50%)',background:'#1a56db',color:'#fff',padding:'10px 20px',borderRadius:'8px',fontSize:'14px',fontWeight:'600',zIndex:'999',opacity:'1',transition:'opacity 0.4s',whiteSpace:'nowrap'});document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},400);},1800);}
+
+load();
+</script>
+</body>
+</html>
