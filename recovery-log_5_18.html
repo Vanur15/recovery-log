@@ -489,6 +489,28 @@ function populateDropdown(){
   }
   sel.value=prev;
 }
+
+function fillFromLib(){var id=parseInt(document.getElementById('med-select').value);if(!id)return;var m=meds.find(function(m){return m.id===id;});if(!m)return;document.getElementById('med-name').value=m.name||'';document.getElementById('med-dose').value=m.dose||'';document.getElementById('med-count-in').value=m.count||'';document.getElementById('med-notes').value=m.notes||'';}
+
+async function logMed(){
+  var name=document.getElementById('med-name').value.trim();var time=document.getElementById('med-time').value;
+  if(!name||!time){alert('Enter medication name and time.');return;}
+  var who=document.getElementById('med-who').value.trim().toUpperCase();
+  var logDate=dispDate(document.getElementById('med-date').value);
+  var logTime=fmt(time);
+  var e={type:'med',date:logDate,time:logTime,name:name,dose:document.getElementById('med-dose').value.trim(),count:document.getElementById('med-count-in').value.trim(),notes:[document.getElementById('med-notes').value.trim(),who?'by '+who:''].filter(Boolean).join(' — '),ts:Date.now()};
+  entries.push(e);
+  ['med-name','med-dose','med-count-in','med-notes'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('med-select').value='';
+  updateCounts();await saveEntry(e);
+  // Update reminder if this med has one
+  var m=meds.find(function(m){return m.name.toLowerCase()===name.toLowerCase();});
+  if(m){var r=reminders.find(function(r){return r.id===m.id;});if(r&&m.freq){await advanceDose(r,logDate,logTime);r.active=true;await saveRem(r);}}
+  updateActivitySuggestions();
+  toast('Medication logged');
+}
+
+
 async function logUrine(){var time=document.getElementById('urine-time').value;if(!time){alert('Enter time.');return;}var amt=document.getElementById('urine-amount').value;var who=document.getElementById('urine-who').value.trim().toUpperCase();var notes=document.getElementById('urine-notes').value.trim();var e={type:'urine',date:dispDate(document.getElementById('urine-date').value),time:fmt(time),amount:amt?parseInt(amt):null,color:selClr,notes:[notes,who?'by '+who:''].filter(Boolean).join(' — '),ts:Date.now()};entries.push(e);document.getElementById('urine-amount').value='';document.getElementById('urine-notes').value='';document.querySelectorAll('.color-btn').forEach(function(b){b.classList.remove('selected');});selClr='';document.getElementById('color-label').textContent='No color selected';updateCounts();await saveEntry(e);toast('Urine logged');}
 async function logActivity(){var name=document.getElementById('act-name').value.trim();var time=document.getElementById('act-time').value;if(!name||!time){alert('Enter activity and time.');return;}var who=document.getElementById('act-who').value.trim().toUpperCase();var e={type:'activity',date:dispDate(document.getElementById('act-date').value),time:fmt(time),name:name,notes:[document.getElementById('act-notes').value.trim(),who?'by '+who:''].filter(Boolean).join(' — '),ts:Date.now()};entries.push(e);document.getElementById('act-name').value='';document.getElementById('act-notes').value='';updateCounts();await saveEntry(e);updateActivitySuggestions();toast('Activity logged');}
 
